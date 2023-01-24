@@ -21,7 +21,6 @@ blender -b flute_with_full_faces.blend -P panpipe_entrypoint.py -- --freqs 500  
 ```
 
 Example to create the same panpipe as in previous code snippet without sorting the flutes:
-Shortened example
 ```
 blender -b flute_with_full_faces.blend -P panpipe_entrypoint.py -- -f 500  400  300 900 -o pipe_d5.stl --no-sorted -d 5
 ```
