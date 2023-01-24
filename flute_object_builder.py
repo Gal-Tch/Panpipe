@@ -1,7 +1,7 @@
 import bpy
 import logging
 from panpipe_utils import duplicate_base_flute, select_vertex_group, BASE_FLUTE_DEPTH
-from flute_parameters import HEAD_DEPTH, INNER_CHAMBER_GAP, END_VERTEX_GROUP_NAME
+from flute_parameters import HEAD_DEPTH, INNER_CHAMBER_GAP, END_VERTEX_GROUP_NAME, BIAS
 
 logger = logging.getLogger(__name__)
 
@@ -10,7 +10,7 @@ class FluteAdder:
     def __init__(self, flute_number: int, flute_length: float, xz_dimensions: float, panpipe: bpy.types.Object = None):
         self.flute_object = duplicate_base_flute()
         self.flute_number = flute_number
-        self.flute_length = flute_length
+        self.flute_length = flute_length + BIAS
         self.flute_xz_dimensions = xz_dimensions
         self.panpipe = panpipe
 

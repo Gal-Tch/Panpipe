@@ -53,5 +53,5 @@ if __name__ == "__main__":
     flute_dimensions = args.dimensions
     logger.info(f"Starting to create panpipe with {args=}")
     if sort_flutes:
-        frequencies_to_play = sorted(frequencies_to_play, reverse=True)
+        frequencies_to_play = sorted(frequencies_to_play)
     main(frequencies_to_play=frequencies_to_play, result_file_path=output_path, flute_xz_dimensions=flute_dimensions)
