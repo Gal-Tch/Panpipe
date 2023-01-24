@@ -9,10 +9,25 @@ dir = os.path.dirname(bpy.data.filepath)
 if not dir in sys.path:
     sys.path.append(dir)
 
-from panpipe_utils import frequency_to_length, save_stl, BASE_FLUTE_HEIGHT
+from panpipe_utils import save_stl, BASE_FLUTE_HEIGHT
 from flute_object_builder import FluteAdder
 
 logger = logging.getLogger(__name__)
+
+FLUTE_LENGTH_KEY = "flute_length"
+HOLES_KEY = "holes"
+
+
+def convert_flute_argument_to_dict(flute_argument: str) -> dict:
+    flute_parts = flute_argument.split(":", maxsplit=1)
+    flute_length = float(flute_parts[0])
+    holes_str = flute_parts[1].split(":") if len(flute_parts) > 1 else []
+    holes = list(map(float, holes_str))
+    return {FLUTE_LENGTH_KEY: flute_length, HOLES_KEY: holes}
+
+
+def convert_flute_arguments_to_dicts(flute_arguments: list[str]) -> list[dict]:
+    return list(map(convert_flute_argument_to_dict, flute_arguments))
 
 
 def parse_args():
@@ -21,7 +36,12 @@ def parse_args():
 
     parser.add_argument("--sorted", action=argparse.BooleanOptionalAction, default=True, help="sort flutes by length")
     parser.add_argument(
-        "-f", "--freqs", required=True, nargs="+", type=float, help="frequencies to play: 440, 760.3..."
+        "-f",
+        "--flutes",
+        required=True,
+        nargs="+",
+        type=str,
+        help="flutes in the following format <flute_length>:<flute_first_hole_location>:<flute_second_hole_location>... Example: 190:70 120:50",
     )
     parser.add_argument(
         "-o", "--output", type=str, default="panpipe.stl", help="stl file output path. Default panpipe.stl"
@@ -31,13 +51,16 @@ def parse_args():
     return parser.parse_args()
 
 
-def main(frequencies_to_play: list[float], result_file_path: str, flute_xz_dimensions: float = None):
-    flute_lengths = list(map(frequency_to_length, frequencies_to_play))
+def main(flutes_to_create: list[dict], result_file_path: str, flute_xz_dimensions: float = None):
     flute_xz_dimensions = flute_xz_dimensions or BASE_FLUTE_HEIGHT
     panpipe = None
-    for i, flute_length in enumerate(flute_lengths):
+    for i, flute_to_create in enumerate(flutes_to_create):
         panpipe = FluteAdder(
-            flute_number=i, flute_length=flute_lengths[i], xz_dimensions=flute_xz_dimensions, panpipe=panpipe
+            flute_number=i,
+            flute_length=flute_to_create[FLUTE_LENGTH_KEY],
+            xz_dimensions=flute_xz_dimensions,
+            holes=flute_to_create[HOLES_KEY],
+            panpipe=panpipe,
         ).add_flute_to_panpipe()
 
     save_stl(object_to_save=panpipe, filepath=result_file_path)
@@ -48,10 +71,10 @@ def main(frequencies_to_play: list[float], result_file_path: str, flute_xz_dimen
 if __name__ == "__main__":
     args = parse_args()
     sort_flutes = args.sorted
-    frequencies_to_play = args.freqs
     output_path = args.output
     flute_dimensions = args.dimensions
+    flutes = convert_flute_arguments_to_dicts(args.flutes)
     logger.info(f"Starting to create panpipe with {args=}")
     if sort_flutes:
-        frequencies_to_play = sorted(frequencies_to_play)
-    main(frequencies_to_play=frequencies_to_play, result_file_path=output_path, flute_xz_dimensions=flute_dimensions)
+        flutes.sort(reverse=True, key=lambda flute_dict: flute_dict[FLUTE_LENGTH_KEY])
+    main(flutes_to_create=flutes, result_file_path=output_path, flute_xz_dimensions=flute_dimensions)

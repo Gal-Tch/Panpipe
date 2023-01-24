@@ -1,17 +1,31 @@
 import bpy
 import logging
-from panpipe_utils import duplicate_base_flute, select_vertex_group, BASE_FLUTE_DEPTH
-from flute_parameters import HEAD_DEPTH, INNER_CHAMBER_GAP, END_VERTEX_GROUP_NAME, BIAS
+from panpipe_utils import (
+    duplicate_base_flute,
+    select_vertex_group,
+    BASE_FLUTE_DEPTH,
+    select_finger_hole_only,
+    get_finger_hole,
+)
+from flute_parameters import HEAD_DEPTH, INNER_CHAMBER_GAP, END_VERTEX_GROUP_NAME, BIAS, FINGER_HOLE_RATIO
 
 logger = logging.getLogger(__name__)
 
 
 class FluteAdder:
-    def __init__(self, flute_number: int, flute_length: float, xz_dimensions: float, panpipe: bpy.types.Object = None):
+    def __init__(
+        self,
+        flute_number: int,
+        flute_length: float,
+        xz_dimensions: float,
+        holes: list[float],
+        panpipe: bpy.types.Object = None,
+    ):
         self.flute_object = duplicate_base_flute()
         self.flute_number = flute_number
         self.flute_length = flute_length + BIAS
         self.flute_xz_dimensions = xz_dimensions
+        self.holes = holes
         self.panpipe = panpipe
 
     def rename_flute_vertex_groups(self) -> None:
@@ -80,6 +94,36 @@ class FluteAdder:
             self.flute_xz_dimensions,
         )
 
+    def set_finger_hole_dimensions(self):
+        finger_hole_object = get_finger_hole()
+        finger_hole_object.dimensions = (
+            self.flute_xz_dimensions / FINGER_HOLE_RATIO,
+            self.flute_xz_dimensions / FINGER_HOLE_RATIO,
+            self.flute_xz_dimensions,
+        )
+
+    def set_finger_hole_location(self, hole_location: float):
+        finger_hole_object = get_finger_hole()
+        finger_hole_object.location.x = 0
+        finger_hole_object.location.y = hole_location
+        flute_z_location = self.flute_number * self.flute_xz_dimensions
+        finger_hole_object.location.z = flute_z_location - (self.flute_xz_dimensions / 2)
+
+    def insert_finger_holes(self):
+        logger.info(f"Inserting finger holes {self.holes=}")
+        for hole_location in self.holes:
+            self.set_finger_hole_dimensions()
+            self.set_finger_hole_location(hole_location=hole_location)
+            self.cut_hole_in_flute()
+
+    def cut_hole_in_flute(self):
+        finger_hole_object = get_finger_hole()
+        modifier_name = f"Bool_{self.flute_number}"
+        bool_modifier = self.flute_object.modifiers.new(modifier_name, "BOOLEAN")
+        bool_modifier.object = finger_hole_object
+        bool_modifier.operation = "DIFFERENCE"
+        bpy.ops.object.modifier_apply(modifier=modifier_name)
+
     def create_new_flute(self) -> bpy.types.Object:
         # rename the new flute object, initialize its location
         self.flute_object.name = f"flute_{self.flute_number}"
@@ -88,6 +132,7 @@ class FluteAdder:
         self.set_flute_length()
         # we rename the vertex groups to avoid naming collisions when merging flutes objects together
         self.rename_flute_vertex_groups()
+        self.insert_finger_holes()
 
     def add_flute_to_panpipe(self) -> bpy.types.Object:
         self.create_new_flute()
