@@ -20,7 +20,7 @@ Example to create three flutes with 500, 400 and 600 frequencies, and width of 5
 blender -b flute_with_full_faces.blend -P panpipe_entrypoint.py -- --freqs 500  400 600 --sorted --dimensions 5
 ```
 
-Example to create the same panpipe as in previous code snippet without sorting the flutes, and saving it to file pipe.stl:
+Example to create panpipe with 4 flutes, without sorting the flutes and saving it to file pipe.stl:
 ```
 blender -b flute_with_full_faces.blend -P panpipe_entrypoint.py -- -f 500  400  300 900 -o pipe.stl --no-sorted -d 5
 ```

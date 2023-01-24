@@ -12,17 +12,21 @@ if not dir in sys.path:
 from panpipe_utils import frequency_to_length, save_stl, BASE_FLUTE_HEIGHT
 from flute_object_builder import FluteAdder
 
-sys.argv = [__file__] + (sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else [])
 logger = logging.getLogger(__name__)
 
 
 def parse_args():
+    sys.argv = [__file__] + (sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else [])
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--sorted", action=argparse.BooleanOptionalAction, default=True, help="sort flutes by length")
-    parser.add_argument("-f", "--freqs", nargs="+", type=float, help="frequencies to play: 440, 760.3...")
-    parser.add_argument("-o", "--output", type=str, default="panpipe.stl", help="stl file output path ")
-    parser.add_argument("-d", "--dimensions", type=float, default=None, help="the x,z dimensions in mm")
+    parser.add_argument(
+        "-f", "--freqs", required=True, nargs="+", type=float, help="frequencies to play: 440, 760.3..."
+    )
+    parser.add_argument(
+        "-o", "--output", type=str, default="panpipe.stl", help="stl file output path. Default panpipe.stl"
+    )
+    parser.add_argument("-d", "--dimensions", type=float, default=20, help="the x,z dimensions in mm. Default 20")
 
     return parser.parse_args()
 
@@ -47,7 +51,7 @@ if __name__ == "__main__":
     frequencies_to_play = args.freqs
     output_path = args.output
     flute_dimensions = args.dimensions
-    logger.info(f"{args=}")
+    logger.info(f"Starting to create panpipe with {args=}")
     if sort_flutes:
         frequencies_to_play = sorted(frequencies_to_play, reverse=True)
     main(frequencies_to_play=frequencies_to_play, result_file_path=output_path, flute_xz_dimensions=flute_dimensions)
