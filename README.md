@@ -6,7 +6,8 @@ The user can specify how many flutes should the panpipe have, the frequency of e
 
 
 ## CLI example
-* please note that your current working directory is the project root
+* Please make sure that your current working directory is the project root.
+* This project is tested on Blender 2.93.5. 
 
 Simple example to create two flutes with 500 and 400 frequencies (sorted):
 ```
